@@ -1,0 +1,8 @@
+--Join January 2020 complaints to their mapped segments
+
+select a.*, b.mapped_segment
+  from card_db_collab.lab_channels_complaints.cmplant_pl a
+  left join card_db_collab.lab_complaints_discovery.mapped_segment b
+      on upper(a.cnsmr_type_desc) = upper(b.cnsmr_type_desc)
+      and Upper(a.Tier) = Upper(b.Tier)
+  where a.date_received between '2020-01-01' and '2020-01-31';

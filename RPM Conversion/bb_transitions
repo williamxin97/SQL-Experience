@@ -1,0 +1,222 @@
+create or replace table all_trans as
+(
+select 
+  date_trunc('month',stmt_end_dt) as month
+  , a.acct_id
+  , a.curr_bal
+  ,case
+    WHEN a.svc_ownr_cd IN ('000010','000011', '000051', '000088','000086','000090','000091') THEN 'US Card Mainstreet'
+    WHEN a.svc_ownr_cd IN ('000022','000023', '000052', '000087', '000089') THEN 'US Card Upmarket'
+    when a.svc_ownr_cd in ('000114','000115') then 'Walmart PLCC'
+    when a.svc_ownr_cd in ('000118','000119','000120','000121') then 'Walmart Cobrand'
+    end as lob
+  ,case
+    WHEN b.cpc_cd IN('561','563') THEN 'Walmart Front Book'
+    WHEN b.cpc_cd IN('560','562') THEN 'Walmart Back Book'
+    WHEN b.cpc_cd IN('560','562','561','563') THEN 'Walmart'
+    ELSE 'Branded Book'
+    end as portfolio
+  ,cyc_pdue_bkt_num
+from db.pcdw.t2_stmt a
+left join db.pcdw.t2_acct_fin_hier_bc b -- for cpc code, when split front/back book
+  on a.acct_id = b.acct_id
+where 
+  svc_ownr_cd  IN ('000010','000011', '000051', '000088','000086','000090','000091','000022','000023', '000052', '000087', '000089','000114','000115','000118','000119','000120','000121')
+  and a.stmt_end_dt >= '2018-09-01'
+  and a.acct_sfx_num = 0
+  and a.provdr_1_id = 1
+  and a.chrgof_cd is null
+  --and cyc_pdue_bkt_num in (1,2,3,4,5,6)
+  and b.acct_sfx_num = 0
+  and b.PROVDR_1_ID = 1
+  --and b.cpc_cd IN('560','562','561','563') -- limit to Walmart to run faster. Remove this by default, when also getting Mainstreet
+  and month >= '2018-09-01'
+);
+
+create or replace table all_trans as
+(select *, count(acct_id) over (partition by acct_id, month) as dupes from all_trans);
+create or replace table all_trans as
+(select * from all_trans where acct_id not in (select acct_id from all_trans where dupes = 2));
+alter table all_trans drop dupes;
+
+--(select * from wmt_trans where month = '2019-10-01')
+
+create or replace table all_accts as
+(select distinct acct_id, lob, portfolio from all_trans);
+
+
+create or replace table all_matx as
+select head.* 
+  , a.cyc_pdue_bkt_num as bkt10, a.curr_bal as bal10
+  , b.cyc_pdue_bkt_num as bkt11, b.curr_bal as bal11
+  , c.cyc_pdue_bkt_num as bkt12, c.curr_bal as bal12
+  , d.cyc_pdue_bkt_num as bkt01, d.curr_bal as bal01
+  , e.cyc_pdue_bkt_num as bkt02, e.curr_bal as bal02
+  , f.cyc_pdue_bkt_num as bkt03, f.curr_bal as bal03
+  , g.cyc_pdue_bkt_num as bkt04, g.curr_bal as bal04
+  , h.cyc_pdue_bkt_num as bkt05, h.curr_bal as bal05
+  , i.cyc_pdue_bkt_num as bkt06, i.curr_bal as bal06
+  , j.cyc_pdue_bkt_num as bkt07, j.curr_bal as bal07
+from all_accts head
+left join (select * from all_trans where month = '2019-10-01') a
+on a.acct_id = head.acct_id
+left join (select * from all_trans where month = '2019-11-01') b
+on b.acct_id = head.acct_id
+left join (select * from all_trans where month = '2019-12-01') c
+on c.acct_id = head.acct_id
+left join (select * from all_trans where month = '2020-01-01') d
+on d.acct_id = head.acct_id
+left join (select * from all_trans where month = '2020-02-01') e
+on e.acct_id = head.acct_id
+left join (select * from all_trans where month = '2020-03-01') f
+on f.acct_id = head.acct_id
+left join (select * from all_trans where month = '2020-04-01') g
+on g.acct_id = head.acct_id
+left join (select * from all_trans where month = '2020-05-01') h
+on h.acct_id = head.acct_id
+left join (select * from all_trans where month = '2020-06-01') i
+on i.acct_id = head.acct_id
+left join (select * from all_trans where month = '2020-07-01') j
+on j.acct_id = head.acct_id;
+
+
+create or replace table all_matx as
+select head.* 
+  , a.cyc_pdue_bkt_num as bkt10, a.curr_bal as bal10
+  , b.cyc_pdue_bkt_num as bkt11, b.curr_bal as bal11
+  , c.cyc_pdue_bkt_num as bkt12, c.curr_bal as bal12
+  , d.cyc_pdue_bkt_num as bkt01, d.curr_bal as bal01
+  , e.cyc_pdue_bkt_num as bkt02, e.curr_bal as bal02
+  , f.cyc_pdue_bkt_num as bkt03, f.curr_bal as bal03
+  , g.cyc_pdue_bkt_num as bkt04, g.curr_bal as bal04
+  , h.cyc_pdue_bkt_num as bkt05, h.curr_bal as bal05
+  , i.cyc_pdue_bkt_num as bkt06, i.curr_bal as bal06
+  , j.cyc_pdue_bkt_num as bkt07, j.curr_bal as bal07
+from all_accts head
+left join (select * from all_trans where month = '2018-10-01') a
+on a.acct_id = head.acct_id
+left join (select * from all_trans where month = '2018-11-01') b
+on b.acct_id = head.acct_id
+left join (select * from all_trans where month = '2018-12-01') c
+on c.acct_id = head.acct_id
+left join (select * from all_trans where month = '2019-01-01') d
+on d.acct_id = head.acct_id
+left join (select * from all_trans where month = '2019-02-01') e
+on e.acct_id = head.acct_id
+left join (select * from all_trans where month = '2019-03-01') f
+on f.acct_id = head.acct_id
+left join (select * from all_trans where month = '2019-04-01') g
+on g.acct_id = head.acct_id
+left join (select * from all_trans where month = '2019-05-01') h
+on h.acct_id = head.acct_id
+left join (select * from all_trans where month = '2019-06-01') i
+on i.acct_id = head.acct_id
+left join (select * from all_trans where month = '2019-07-01') j
+on j.acct_id = head.acct_id;
+  
+--select * from ms_matx limit 100;
+
+create or replace table wmt_results as (
+  select * from all_matx
+  where portfolio = 'Walmart Back Book'
+  and bkt10 is not null 
+  and bkt10 <> 7
+  and (bkt11-bkt10 <= 1 or bkt11 is null)
+  and (bkt12-bkt11 <= 1 or bkt12 is null)
+  and (bkt01-bkt12 <= 1 or bkt01 is null)
+  and (bkt02-bkt01 <= 1 or bkt02 is null)
+  and (bkt03-bkt02 <= 1 or bkt03 is null)
+  and (bkt04-bkt03 <= 1 or bkt04 is null)
+  and (bkt05-bkt04 <= 1 or bkt05 is null)
+  and (bkt06-bkt05 <= 1 or bkt06 is null)
+  and (bkt07-bkt06 <= 1 or bkt07 is null)
+  );
+  
+
+create or replace table ms_results as (
+  select * from all_matx
+  where lob = 'US Card Mainstreet'
+  and bkt10 is not null 
+  and bkt10 <> 7
+  and (bkt11-bkt10 <= 1 or bkt11 is null)
+  and (bkt12-bkt11 <= 1 or bkt12 is null)
+  and (bkt01-bkt12 <= 1 or bkt01 is null)
+  and (bkt02-bkt01 <= 1 or bkt02 is null)
+  and (bkt03-bkt02 <= 1 or bkt03 is null)
+  and (bkt04-bkt03 <= 1 or bkt04 is null)
+  and (bkt05-bkt04 <= 1 or bkt05 is null)
+  and (bkt06-bkt05 <= 1 or bkt06 is null)
+  and (bkt07-bkt06 <= 1 or bkt07 is null)
+  );
+  
+select lob, bkt10, bkt11, bkt12, bkt01, bkt02, bkt03, bkt04, bkt05, bkt06, bkt07, count(acct_id) as qty 
+  from wmt_results
+  group by 1,2,3,4,5,6,7,8,9,10,11 order by qty desc;
+  
+/*select bkt10, bkt11, count(acct_id) as qty
+  from wmt_results
+  where lob = 'US Card Mainstreet'
+  and bkt10 is not null 
+  and (bkt11-bkt10 <= 1 or bkt11 is null)
+  and (bkt12-bkt11 <= 1 or bkt12 is null)
+  and (bkt01-bkt12 <= 1 or bkt01 is null)
+  and (bkt02-bkt01 <= 1 or bkt02 is null)
+  and (bkt03-bkt02 <= 1 or bkt03 is null)
+  and (bkt04-bkt03 <= 1 or bkt04 is null)
+  and (bkt05-bkt04 <= 1 or bkt05 is null)
+  and (bkt06-bkt05 <= 1 or bkt06 is null)
+  and (bkt07-bkt06 <= 1 or bkt07 is null)
+  group by 1,2;
+*/
+--create or replace table ms_bal as 
+--(
+select month, lob, portfolio, coalesce(bkt_curr, 100) as bkt_curr, coalesce(bkt_next, 100) as bkt_next, bal from 
+(
+  (select '2019-10-01' as month, lob, portfolio, bkt10 as bkt_curr ,bkt11 as bkt_next, sum(bal10) as bal from wmt_results group by 1,2,3,4,5 order by bal desc)
+  union all
+  (select '2019-11-01' as month, lob, portfolio, bkt11 as bkt_curr ,bkt12 as bkt_next, sum(bal11) as bal from wmt_results group by 1,2,3,4,5 order by bal desc)
+  union all
+  (select '2019-12-01' as month, lob, portfolio, bkt12 as bkt_curr ,bkt01 as bkt_next, sum(bal12) as bal from wmt_results group by 1,2,3,4,5 order by bal desc)
+  union all
+  (select '2020-01-01' as month, lob, portfolio, bkt01 as bkt_curr ,bkt02 as bkt_next, sum(bal01) as bal from wmt_results group by 1,2,3,4,5 order by bal desc)
+  union all
+  (select '2020-02-01' as month, lob, portfolio, bkt02 as bkt_curr ,bkt03 as bkt_next, sum(bal02) as bal from wmt_results group by 1,2,3,4,5 order by bal desc)
+  union all
+  (select '2020-03-01' as month, lob, portfolio, bkt03 as bkt_curr ,bkt04 as bkt_next, sum(bal03) as bal from wmt_results group by 1,2,3,4,5 order by bal desc)
+  union all
+  (select '2020-04-01' as month, lob, portfolio, bkt04 as bkt_curr ,bkt05 as bkt_next, sum(bal04) as bal from wmt_results group by 1,2,3,4,5 order by bal desc)
+  union all
+  (select '2020-05-01' as month, lob, portfolio, bkt05 as bkt_curr ,bkt06 as bkt_next, sum(bal05) as bal from wmt_results group by 1,2,3,4,5 order by bal desc)
+  union all
+  (select '2020-06-01' as month, lob, portfolio, bkt06 as bkt_curr ,bkt07 as bkt_next, sum(bal06) as bal from wmt_results group by 1,2,3,4,5 order by bal desc)
+)
+where bal is not null order by 1 asc, 6 desc
+;
+
+select lob, bkt10, bkt11, bkt12, bkt01, bkt02, bkt03, bkt04, bkt05, bkt06, bkt07, count(acct_id) as qty 
+  from ms_results
+  group by 1,2,3,4,5,6,7,8,9,10,11 order by qty desc;
+  
+
+select month, lob, portfolio, coalesce(bkt_curr, 100) as bkt_curr, coalesce(bkt_next, 100) as bkt_next, bal from 
+(
+  (select '2019-10-01' as month, lob, portfolio, bkt10 as bkt_curr ,bkt11 as bkt_next, sum(bal10) as bal from ms_results group by 1,2,3,4,5 order by bal desc)
+  union all
+  (select '2019-11-01' as month, lob, portfolio, bkt11 as bkt_curr ,bkt12 as bkt_next, sum(bal11) as bal from ms_results group by 1,2,3,4,5 order by bal desc)
+  union all
+  (select '2019-12-01' as month, lob, portfolio, bkt12 as bkt_curr ,bkt01 as bkt_next, sum(bal12) as bal from ms_results group by 1,2,3,4,5 order by bal desc)
+  union all
+  (select '2020-01-01' as month, lob, portfolio, bkt01 as bkt_curr ,bkt02 as bkt_next, sum(bal01) as bal from ms_results group by 1,2,3,4,5 order by bal desc)
+  union all
+  (select '2020-02-01' as month, lob, portfolio, bkt02 as bkt_curr ,bkt03 as bkt_next, sum(bal02) as bal from ms_results group by 1,2,3,4,5 order by bal desc)
+  union all
+  (select '2020-03-01' as month, lob, portfolio, bkt03 as bkt_curr ,bkt04 as bkt_next, sum(bal03) as bal from ms_results group by 1,2,3,4,5 order by bal desc)
+  union all
+  (select '2020-04-01' as month, lob, portfolio, bkt04 as bkt_curr ,bkt05 as bkt_next, sum(bal04) as bal from ms_results group by 1,2,3,4,5 order by bal desc)
+  union all
+  (select '2020-05-01' as month, lob, portfolio, bkt05 as bkt_curr ,bkt06 as bkt_next, sum(bal05) as bal from ms_results group by 1,2,3,4,5 order by bal desc)
+  union all
+  (select '2020-06-01' as month, lob, portfolio, bkt06 as bkt_curr ,bkt07 as bkt_next, sum(bal06) as bal from ms_results group by 1,2,3,4,5 order by bal desc)
+)
+where bal is not null order by 1 asc, 6 desc
+;

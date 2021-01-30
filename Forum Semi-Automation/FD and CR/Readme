@@ -1,0 +1,41 @@
+*Note: For parts 2 and 3, the pivot tables in the csv will not have proper column labeling due to SQL limits.
+* Instead, you must simply paste the values of the adjacent table, transposed.
+* This is made more apparent once you actually see the either the csv or simply run the queries
+
+*This subquery "concat(b.mth_abrv_nm,'-',substring(b.yr_num,3,2)) as month" is used to get monthly dates into a shorter form
+* Ex: '2020-04-01' -> 'Apr-20'
+
+Part 1
+
+1. fd_tables
+  - This does not filter out complaints for fraud and disputes yet
+  - This creates tables for complaints given two time periods
+    - The "long" table looks at 16 months of data
+    - The "short" table looks at 20 weeks of data
+
+2a, 2b1. disputes_subdriver_weekly and fraud_subdriver_weekly
+  - Shows weekly subdriver breakdown for tier 3 volumes
+  - Usually, 8 total subdrivers are shown (this won't be the case for Disputes)
+  - Disputes is broken into 7 total subdrivers: The 6 largest subdrivers + 1 "Other" aggregation
+    - This is done because there are only 9 total subdrivers, and the 7th largest subdriver is "NA"
+  - Fraud is broken into 8 total subdrivers: The 7 largest subdrivers + 1 "Other" aggregation
+
+2b2. fraud_other_subdriver_weekly
+  - Shows the breakdown of Fraud's "Other" subdriver, which consists of around 20 subdrivers.
+    - The 7 largest subdrivers, and ~20 subdrivers with lower volume
+  
+3a, 3b. disputes_segment_monthly and fraud_segment_monthly
+  - Monthly breakdown of segment volumes for disputes and fraud complaints, for tier 1-3.
+  
+   
+Part 2 (This can be run before part 1 if you want)
+
+4. cr_tables.sql
+  - The temporary CR table that the next queries are run on
+
+5a. cr_t3_by_segment.sql
+  - Tier 3 Collections complaints by segment
+  - Tier 3 Recoveries complaints by segment
+  
+5b. cr_volume_by_tier_and_segment.sql
+  - CR (both collections and recoveries) complaint volumes by tier and segment

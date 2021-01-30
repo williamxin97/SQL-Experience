@@ -1,0 +1,61 @@
+--this creates a control group to look at baseline attrition
+
+--pull out necessary fields from the table that has all accounts, complaining and non-complaining
+create or replace table sb.user_aik604.temp_control as (
+  select distinct acct_id, open_dt, cls_dt, clsd_reas_cd, null as date_received, stat_segment from sb.user_aik604.info_and_complaints
+);
+
+--see how many accounts are pulled
+select acct_id from sb.user_aik604.temp_control;
+
+--This query takes only 1% of these accounts, because there are just way too many
+create or replace table sb.user_aik604.temp_control as (
+  select * from sb.user_aik604.temp_control
+  sample(1)
+);
+
+--Sets a random "date_received" for all accounts to be between 01-01 and 12-31 of 2019. This eliminates seasonality effects on attrition
+update sb.user_aik604.temp_control
+set date_received = DATEADD(DAY, (abs(hash(uuid_string())%365)), '2019-01-01');
+
+--This just gets rid of accounts that closed before our fake "date_received", and some data errors with close dates and close reasons
+create or replace table sb.user_aik604.temp_control as (
+  select distinct * from sb.user_aik604.temp_control
+  where (cls_dt >= date_received or cls_dt is null)
+  and open_dt <= date_received
+  and (cls_dt is null or clsd_reas_cd <> '*2')
+);
+
+--create the attrition fields
+create or replace table sb.user_aik604.control_group as(
+  select *, 
+  ceil(cast(datediff(day, date_received, cls_dt) as float)/(30.4375)) as com_dead_m,
+  ceil(cast(datediff(day, date_received, cls_dt) as float)) as com_dead_d  
+  from sb.user_aik604.temp_control
+);
+
+update sb.user_aik604.control_group
+set com_dead_m = 1
+where com_dead_m = 0;
+update sb.user_aik604.control_group
+set com_dead_m = 100000
+where com_dead_m is null;
+update sb.user_aik604.control_group
+set com_dead_d = 100000
+where com_dead_d is null;
+
+--join to product data
+create or replace table sb.user_aik604.control_group as (
+  select distinct * from 
+    (select *
+      , row_number() over (partition by acct_id order by effective_start_date desc) as row_num 
+    from 
+     (select a.*, b.product_family_name, b.product_line_name, b.effective_start_date 
+        from sb.user_aik604.control_group a
+        left join CARD_DB.PHDP_CARD.MATCHBOX_PRODUCT_REGISTRY_ACCOUNT_PRODUCT b
+        on a.acct_id = b.account_id
+        where date_received >= effective_start_date
+      )
+    )
+    where row_num = 1
+);

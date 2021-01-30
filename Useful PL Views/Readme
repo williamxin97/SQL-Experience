@@ -1,0 +1,18 @@
+coronavirus_volumes   
+  - Multiple queries related to pulling Tier 2 complaints with coronavirus keywords
+escalation_scripts
+  - Use fuzzy match to join escalated tier 1 complaints to the tier 2 complaints in the PL
+get_mapped_drivers
+  - Joining PL data to mapped drivers. Hierarchy is Mapped Driver --> Primary Driver --> Primary Subdriver
+get_mapped_products
+  - Joining PL data to products for each account, ie Platinum, Quicksilver, QuicksilverOne, etc.
+small_business
+  - Many scripts related to small business complaints
+volume_views
+  - Total volumes for 2020, by [Branded Book vs Partner] and tier
+  - Complaint volumes by month and tier
+  - Total volumes for 2020, by mapped driver and tier
+  - Total volumes for 2020, by partner
+  - Total volumes for 2020, by segment and [Branded Book vs Partner]
+  - Total volumes for 2020, by segment and tier
+  - Total volumes for 2020, by data source and tier

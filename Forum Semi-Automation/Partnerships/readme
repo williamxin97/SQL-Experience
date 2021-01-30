@@ -1,0 +1,25 @@
+The scripts can be run in any order
+
+*Note: The actual outputs for these queries will mostly be pivot tables, but with the column names removed
+* Instead, you must simply paste the values of the adjacent table, transposed.
+* This is made more apparent once you actually see the either the csv or simply run the queries
+
+*This subquery "concat(b.mth_abrv_nm,'-',substring(b.yr_num,3,2)) as month" is used to get monthly dates into a shorter form
+* Ex: '2020-04-01' -> 'Apr-20'
+
+1. basscab_month_volumes
+  - monthly Tier 3 and Tier 2 complaint volumes for BassCab
+  - past 14 months of data excluding current month (13 months total: ex: 01/01/2019 - 01/31/2020 if current date is 02/05/2020)
+2. basscab_t2_driver_month_volumes
+  - monthly Tier 2 complaint volumes by mapped driver for BassCab
+  - past 7 months of data excluding current month (6 months total: ex: 01/01/2019 - 06/30/2019 if current date is 07/05/2019)
+
+3a. all_partner_t3_partner_month_volumes
+  - monthly tier 3 volumes by partner, for all partners excluding Walmart
+  - past 14 months of data excluding current month (13 months total: ex: 01/01/2019 - 01/31/2020 if current date is 02/05/2020)
+3b. all_partner_t2_partner_month_volumes
+  - monthly tier 2 volumes by partner, for all partners excluding Walmart
+  - past 14 months of data excluding current month (13 months total: ex: 01/01/2019 - 01/31/2020 if current date is 02/05/2020)
+3c. all_partner_t1_partner_month_volumes
+  - monthly tier 1 volumes by partner, for all partners excluding Walmart
+  - past 14 months of data excluding current month (13 months total: ex: 01/01/2019 - 01/31/2020 if current date is 02/05/2020)

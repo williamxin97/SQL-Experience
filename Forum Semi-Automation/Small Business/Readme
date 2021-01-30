@@ -1,0 +1,9 @@
+1. create_base_table
+  - Filters out Small Business complaints within the past 2 years
+  - This must be run before the next two queries
+  
+2a. complaints_by_source
+  - Long data view of complaints by tier, month, and data source
+2b. complaints_by_driver
+  - Long data view of complaints by tier, month, and mapped driver
+

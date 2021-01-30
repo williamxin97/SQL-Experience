@@ -1,0 +1,15 @@
+Here's a collection of various SQL queries I've written for work.
+
+They include the following:
+
+1. Attrition Queries: All queries to build attrition tables
+2. Fasttrack: Scripts related to sampling Fasttrack complaint cases, usually used for compliance reasons.
+3. Forum Semi Automation: Automation scripts for the semi-automation of forum presentations
+  - The data is then processed in Sheets via Google Query
+4. Useful PL views: Some starter scripts for working with complaints PL data
+5. Complaints BAU: Scripts to update the tagging sheet for PM's
+  - Has been phased out
+6. Ad Hoc: Miscellaneous queries for ad hoc requests by other business analysts
+7. RPM Conversion: Queries related to calculating the NPV of a platform conversion within Customer Resiliency.
+
+

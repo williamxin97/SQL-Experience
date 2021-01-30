@@ -1,0 +1,37 @@
+-- When tier 1 phone calls get escalated, the tier 2 phone call ID is listed as "nextcontactid" in the tier 1 data row
+-- The following tries to connect tier 1 complaints to their phone call ID, match the next phone call (Tier 2 agent), and fuzzy match to the PL
+-- Fuzzy match means we can only try to match a Tier 2 call to the PL by account id, date received, and agent
+
+-- Find all tier 1 complaints since 2020
+create or replace table t1_2020 as select acct_id, cmplant_id as cmplant_id1, primary_driver as primary_driver1, primary_subdriver as primary_subdriver1, upper(agent_eid) as agent1, date_received 
+    from card_db_collab.lab_channels_complaints.cmplant_pl
+    where tier = 'Tier 1'
+    and date_received >= '2020-01-01';
+    
+-- Join to the phone call tables and try to get the "nextcontactid" 
+create or replace table t1_2020 as
+    select distinct a.*, b.initiationtimestamp as timestamp1, c.contactid as cmplant_id2, c.initiationtimestamp as timestamp2, upper(c.agent_username) as agent2
+    from t1_2020 a
+    left join card_db.PHDP_CARD_NPI.CREDIT_CARD_TELEPHONY_CONTACT_TRACE_RECORD b
+    on a.cmplant_id1 = b.contactid
+    left join card_db.PHDP_CARD_NPI.CREDIT_CARD_TELEPHONY_CONTACT_TRACE_RECORD c
+    on b.nextcontactid = c.contactid;
+
+-- Find only Tier 1 calls that have been escalated
+create or replace table t1t2_2020 as select * from t1_2020 where cmplant_id2 is not null;
+
+-- Join to the PL again, but only with a fuzzy match
+create or replace table t2_2020 as 
+    select a.acct_id, a.date_received, a.cmplant_id1, a.agent1, a.cmplant_id2, b.cmplant_id as pl_cmplant_id2, a.agent2, 
+        a.primary_driver1, a.primary_subdriver1, b.primary_driver as primary_driver2, b.primary_subdriver as primary_subdriver2
+    from t1t2_2020 a
+    left join card_db_collab.lab_channels_complaints.cmplant_pl b
+    on a.acct_id = b.acct_id
+    and a.date_received = b.date_received
+    and upper(a.agent2) = upper(b.agent_eid);
+
+-- Try to find instances where fuzzy match worked by getting rid of duplicates
+create or replace table t2_trimmed as
+    select *, count(cmplant_id1) over (partition by acct_id, date_received, agent2) as instances from t2_2020;
+create or replace table t2_trimmed as 
+    select * from t2_trimmed where instances = 1;
